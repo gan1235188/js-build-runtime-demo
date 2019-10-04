@@ -1,18 +1,19 @@
 import * as express from 'express'
 import * as fs from 'fs'
 import * as path from 'path'
-import { build } from './build'
+import { build } from 'js-build-by-feature-map'
+import * as featureTestCode from 'js-feature-test'
 
 interface dynamicProperty {
   [key: string]: any
 }
 
 const app = express()
-const distPath = path.resolve(__dirname, '../../dist/')
-const pagesPath = path.resolve(__dirname, '../../pages/')
+const distPath = path.resolve(__dirname, '../dist/')
+const pagesPath = path.resolve(__dirname, '../pages/')
 
 
-const server = app.listen(81)
+app.listen(81)
 
 app.use(express.static('../'))
 
@@ -22,15 +23,25 @@ app.get('/', (req, res) => {
 })
 
 app.get('/js-build-online', async (req, res) => {
-  console.log(req.headers.cookie)
-  const cookie = parseCookie(req.headers.cookie)
-  const featureMap = JSON.parse(cookie['jsFeatureTest'] || '{}')
+  try{
+    const cookie = parseCookie(req.headers.cookie)
+    const featureMap = JSON.parse(cookie['jsFeatureTest'] || '{}')
 
-  await build(featureMap)
+    await build(featureMap, {
+      entry: path.resolve(__dirname, './test-code.js'),
+      output: {
+        path: __dirname,
+        filename: 'result.js'
+      }
+    })
 
-  const content = fs.readFileSync('../build/dist/test-code/index.js')
-  setHeader(res, HttpHeaderContentTypeValue.Js)
-  res.send(content)
+    const content = fs.readFileSync(distPath + '/result.js')
+    setHeader(res, HttpHeaderContentTypeValue.Js)
+    res.send(content)
+  }catch(e) {
+    res.send(JSON.stringify(e))
+  }
+  
 })
 
 function parseCookie(cookies: string) {
@@ -50,11 +61,13 @@ function parseCookie(cookies: string) {
 //   res.send(html)
 // })
 
-// app.get('/feature-test', (req, res) => {
-//     const html = fs.readFileSync('./index.html')
-//     setHeader(res, HttpHeaderContentTypeValue.Html)
-//     res.send(html)
-// })
+app.get('/feature-test', (req, res) => {
+    let html = fs.readFileSync(pagesPath + '/feature-test.html').toString()
+    const script = `<script>${featureTestCode}</script>`
+    html = html.replace('</body>', `${script}</body>`)
+    setHeader(res, HttpHeaderContentTypeValue.Html)
+    res.send(html)
+})
 
 // app.get('/dist/:path', (req, res) => {
 //   setHeader(res, HttpHeaderContentTypeValue.Js)
