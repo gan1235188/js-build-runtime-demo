@@ -4,7 +4,7 @@
       "dist",
       "node_modules"
     ],
-    "exec": "tsc && node ./dist/index.js",
+    "exec": "npm run build && node ./dist/index.js",
     "ext": "ts, tsx, js",
     "includes": [
       "./**/*"

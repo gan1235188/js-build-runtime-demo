@@ -10,6 +10,10 @@ module.exports = {
   devtool: false,
   target: 'node',
   externals: [webpackNodeExternals()],
+  node: {
+    fs: false,
+    __dirname: false
+  },
   module: {
     rules: [
       {

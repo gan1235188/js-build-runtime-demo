@@ -66,6 +66,7 @@
     "express": "^4.17.1",
     "js-feature-test": "git+https://github.com/gan1235188/js-feature-test.git",
     "js-build-by-feature-map": "git+https://github.com/gan1235188/js-build-by-feature-map.git",
+    "js-build-by-feature-map-loader": "git+https://github.com/gan1235188/js-build-by-feature-map-loader.git",
     "nodemon": "^1.19.3",
     "ts-loader": "^6.2.0",
     "typescript": "^3.6.3",

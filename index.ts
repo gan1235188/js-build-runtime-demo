@@ -27,6 +27,7 @@ app.get('/js-build-online', async (req, res) => {
     const cookie = parseCookie(req.headers.cookie)
     const featureMap = JSON.parse(cookie['jsFeatureTest'] || '{}')
 
+    //TODO:防止重复build，识别feature的改变
     await build(featureMap, {
       entry: path.resolve(__dirname, './test-code.js'),
       output: {
@@ -34,6 +35,8 @@ app.get('/js-build-online', async (req, res) => {
         filename: 'result.js'
       }
     })
+
+    console.log('build finished')
 
     const content = fs.readFileSync(distPath + '/result.js')
     setHeader(res, HttpHeaderContentTypeValue.Js)
