@@ -1,8 +1,9 @@
 import * as express from 'express'
 import * as fs from 'fs'
 import * as path from 'path'
-import * as build from 'js-build-by-feature-map'
+import { build } from 'js-build-by-feature-map'
 import * as featureTestCode from 'js-feature-test'
+import * as http from 'http'
 
 interface dynamicProperty {
   [key: string]: any
@@ -24,11 +25,10 @@ app.get('/', (req, res) => {
 
 app.get('/js-build-online', async (req, res) => {
   try{
-    const cookie = parseCookie(req.headers.cookie)
-    const featureMap = JSON.parse(cookie['jsFeatureTest'] || '{}')
+    const featureMap = getFeatureMapFromHeaders(req.headers)
 
     //TODO:防止重复build，识别feature的改变
-    await build.build(featureMap, {
+    await build(featureMap, {
       entry: path.resolve(__dirname, './test-code.js'),
       output: {
         path: __dirname,
@@ -44,8 +44,12 @@ app.get('/js-build-online', async (req, res) => {
   }catch(e) {
     res.send(JSON.stringify(e))
   }
-  
 })
+
+function getFeatureMapFromHeaders(headers: http.IncomingHttpHeaders) {
+  const cookie = parseCookie(headers.cookie)
+  return JSON.parse(cookie['jsFeatureTest'] || '{}')
+}
 
 function parseCookie(cookies: string) {
   const cookieMap: dynamicProperty = {}
@@ -58,12 +62,6 @@ function parseCookie(cookies: string) {
   return cookieMap
 }
 
-// app.get('/pages/:path', (req, res) => {
-//   const html = fs.readFileSync(`${pagesPath}/${req.params.path}`).toString()
-//   setHeader(res, HttpHeaderContentTypeValue.Html)
-//   res.send(html)
-// })
-
 app.get('/feature-test', (req, res) => {
     let html = fs.readFileSync(pagesPath + '/feature-test.html').toString()
     const script = `<script>${featureTestCode}</script>`
@@ -71,13 +69,6 @@ app.get('/feature-test', (req, res) => {
     setHeader(res, HttpHeaderContentTypeValue.Html)
     res.send(html)
 })
-
-// app.get('/dist/:path', (req, res) => {
-//   setHeader(res, HttpHeaderContentTypeValue.Js)
-//   const jsContent = fs.readFileSync(`${distPath}/${req.params.path}`)
-//   res.send(jsContent)
-// })
-
 
 enum HttpHeaderKey {
   ContentType = 'Content-Type'
@@ -90,27 +81,4 @@ enum HttpHeaderContentTypeValue {
 
 function setHeader(res: express.Response, type: HttpHeaderContentTypeValue) {
   res.setHeader(HttpHeaderKey.ContentType, type)
-}
-
-function startApp() {
-  const server = app.listen(81)
-
-  process.on('beforeExit', exit('beforeExit'))
-  process.on('exit', exit('exit'))
-  process.on('SIGKILL', exit('SIGKILL'))
-  process.on('SIGLOST', exit('SIGLOST'))
-  process.on('disconnect', exit('disconnect'))
-  process.on('SIGHUP', exit('SIGHUP'))
-  process.on('SIGINT', exit('SIGINT'))
-
-  let isKilled = false
-  function exit(event: string) {
-    console.log(event)
-
-    return () => {
-      !isKilled && server.close()
-      isKilled = true
-      process.exit()
-    }
-  }
 }
