@@ -1,7 +1,7 @@
 import * as express from 'express'
 import * as fs from 'fs'
 import * as path from 'path'
-import { build } from 'js-build-by-feature-map'
+import * as build from 'js-build-by-feature-map'
 import * as featureTestCode from 'js-feature-test'
 
 interface dynamicProperty {
@@ -28,7 +28,7 @@ app.get('/js-build-online', async (req, res) => {
     const featureMap = JSON.parse(cookie['jsFeatureTest'] || '{}')
 
     //TODO:防止重复build，识别feature的改变
-    await build(featureMap, {
+    await build.build(featureMap, {
       entry: path.resolve(__dirname, './test-code.js'),
       output: {
         path: __dirname,
