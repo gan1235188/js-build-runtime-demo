@@ -19,7 +19,7 @@ app.listen(81)
 app.use(express.static('../'))
 
 app.get('/', (req, res) => {
-  setHeader(res, HttpHeaderContentTypeValue.Html)
+  setHeader(res, HttpHeaderName.ContentType, HttpHeaderContentTypeValue.Html)
   res.send('hollow express')
 })
 
@@ -33,15 +33,23 @@ app.get('/js-build-online', async (req, res) => {
       output: {
         path: __dirname,
         filename: 'result.js'
+      },
+      module: {
+        rules: [
+          {
+            test: /\.js/
+          }
+        ]
       }
     })
 
     console.log('build finished')
 
     const content = fs.readFileSync(distPath + '/result.js')
-    setHeader(res, HttpHeaderContentTypeValue.Js)
+    setHeader(res, HttpHeaderName.ContentType, HttpHeaderContentTypeValue.Js)
     res.send(content)
   }catch(e) {
+    console.error(e)
     res.send(JSON.stringify(e))
   }
 })
@@ -66,12 +74,13 @@ app.get('/feature-test', (req, res) => {
     let html = fs.readFileSync(pagesPath + '/feature-test.html').toString()
     const script = `<script>${featureTestCode}</script>`
     html = html.replace('</body>', `${script}</body>`)
-    setHeader(res, HttpHeaderContentTypeValue.Html)
+    setHeader(res, HttpHeaderName.ContentType, HttpHeaderContentTypeValue.Html)
     res.send(html)
 })
 
-enum HttpHeaderKey {
-  ContentType = 'Content-Type'
+enum HttpHeaderName {
+  ContentType = 'Content-Type',
+  Status = 'status'
 }
 
 enum HttpHeaderContentTypeValue {
@@ -79,6 +88,6 @@ enum HttpHeaderContentTypeValue {
   Js = 'application/javascript; charset=utf-8'
 }
 
-function setHeader(res: express.Response, type: HttpHeaderContentTypeValue) {
-  res.setHeader(HttpHeaderKey.ContentType, type)
+function setHeader(res: express.Response, name: HttpHeaderName, type: string | number) {
+  res.setHeader(name, type)
 }

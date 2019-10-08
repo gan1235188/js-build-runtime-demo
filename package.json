@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "express": "^4.17.1",
-    "js-build-by-feature-map": "latest",
-    "js-feature-test": "latest"
+    "js-build-by-feature-map": "0.0.5",
+    "js-feature-test": "0.0.1"
   }
 }

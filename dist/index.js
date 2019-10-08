@@ -135,7 +135,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var express = __webpack_require__(/*! express */ "express");
 var fs = __webpack_require__(/*! fs */ "fs");
 var path = __webpack_require__(/*! path */ "path");
-var build = __webpack_require__(/*! js-build-by-feature-map */ "js-build-by-feature-map");
+var js_build_by_feature_map_1 = __webpack_require__(/*! js-build-by-feature-map */ "js-build-by-feature-map");
 var featureTestCode = __webpack_require__(/*! js-feature-test */ "js-feature-test");
 var app = express();
 var distPath = path.resolve(__dirname, '../dist/');
@@ -143,23 +143,29 @@ var pagesPath = path.resolve(__dirname, '../pages/');
 app.listen(81);
 app.use(express.static('../'));
 app.get('/', function (req, res) {
-    setHeader(res, HttpHeaderContentTypeValue.Html);
+    setHeaderContent(res, HttpHeaderContentTypeValue.Html);
     res.send('hollow express');
 });
 app.get('/js-build-online', function (req, res) { return __awaiter(void 0, void 0, void 0, function () {
-    var cookie, featureMap, content, e_1;
+    var featureMap, content, e_1;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
                 _a.trys.push([0, 2, , 3]);
-                cookie = parseCookie(req.headers.cookie);
-                featureMap = JSON.parse(cookie['jsFeatureTest'] || '{}');
+                featureMap = getFeatureMapFromHeaders(req.headers);
                 //TODO:防止重复build，识别feature的改变
-                return [4 /*yield*/, build.build(featureMap, {
+                return [4 /*yield*/, js_build_by_feature_map_1.build(featureMap, {
                         entry: path.resolve(__dirname, './test-code.js'),
                         output: {
                             path: __dirname,
                             filename: 'result.js'
+                        },
+                        module: {
+                            rules: [
+                                {
+                                    test: /\.js/
+                                }
+                            ]
                         }
                     })];
             case 1:
@@ -167,17 +173,22 @@ app.get('/js-build-online', function (req, res) { return __awaiter(void 0, void 
                 _a.sent();
                 console.log('build finished');
                 content = fs.readFileSync(distPath + '/result.js');
-                setHeader(res, HttpHeaderContentTypeValue.Js);
+                setHeaderContent(res, HttpHeaderContentTypeValue.Js);
                 res.send(content);
                 return [3 /*break*/, 3];
             case 2:
                 e_1 = _a.sent();
+                console.error(e_1);
                 res.send(JSON.stringify(e_1));
                 return [3 /*break*/, 3];
             case 3: return [2 /*return*/];
         }
     });
 }); });
+function getFeatureMapFromHeaders(headers) {
+    var cookie = parseCookie(headers.cookie);
+    return JSON.parse(cookie['jsFeatureTest'] || '{}');
+}
 function parseCookie(cookies) {
     var cookieMap = {};
     var cookieList = cookies.split(';');
@@ -187,23 +198,13 @@ function parseCookie(cookies) {
     });
     return cookieMap;
 }
-// app.get('/pages/:path', (req, res) => {
-//   const html = fs.readFileSync(`${pagesPath}/${req.params.path}`).toString()
-//   setHeader(res, HttpHeaderContentTypeValue.Html)
-//   res.send(html)
-// })
 app.get('/feature-test', function (req, res) {
     var html = fs.readFileSync(pagesPath + '/feature-test.html').toString();
     var script = "<script>" + featureTestCode + "</script>";
     html = html.replace('</body>', script + "</body>");
-    setHeader(res, HttpHeaderContentTypeValue.Html);
+    setHeaderContent(res, HttpHeaderContentTypeValue.Html);
     res.send(html);
 });
-// app.get('/dist/:path', (req, res) => {
-//   setHeader(res, HttpHeaderContentTypeValue.Js)
-//   const jsContent = fs.readFileSync(`${distPath}/${req.params.path}`)
-//   res.send(jsContent)
-// })
 var HttpHeaderKey;
 (function (HttpHeaderKey) {
     HttpHeaderKey["ContentType"] = "Content-Type";
@@ -213,27 +214,8 @@ var HttpHeaderContentTypeValue;
     HttpHeaderContentTypeValue["Html"] = "text/html; charset=utf-8";
     HttpHeaderContentTypeValue["Js"] = "application/javascript; charset=utf-8";
 })(HttpHeaderContentTypeValue || (HttpHeaderContentTypeValue = {}));
-function setHeader(res, type) {
+function setHeaderContent(res, type) {
     res.setHeader(HttpHeaderKey.ContentType, type);
-}
-function startApp() {
-    var server = app.listen(81);
-    process.on('beforeExit', exit('beforeExit'));
-    process.on('exit', exit('exit'));
-    process.on('SIGKILL', exit('SIGKILL'));
-    process.on('SIGLOST', exit('SIGLOST'));
-    process.on('disconnect', exit('disconnect'));
-    process.on('SIGHUP', exit('SIGHUP'));
-    process.on('SIGINT', exit('SIGINT'));
-    var isKilled = false;
-    function exit(event) {
-        console.log(event);
-        return function () {
-            !isKilled && server.close();
-            isKilled = true;
-            process.exit();
-        };
-    }
 }
 
 
