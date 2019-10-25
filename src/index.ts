@@ -3,6 +3,7 @@ import * as express from 'express'
 import * as service from 'js-build-by-feature-map-express-service'
 import * as path from 'path'
 import * as os from 'os'
+import * as open from 'open'
 
 var app = express()
 var pagesHandle = express.static(path.resolve(__dirname, '../pages'))
@@ -59,10 +60,11 @@ app.use('/source-code', (req: express.Request, res: express.Response) => {
   res.send(sourceCode)
 })
 
-app.listen(8002)
+app.listen(8003)
 
 const ip = getIPAdress() || 'localhost'
-console.log(`使用chrome和IE打开：http://${ip}:8002/pages/demo.html 对比编译结果`)
+console.log(`使用chrome和IE打开：http://${ip}:8003/pages/demo.html 对比编译结果`)
+open(`http://${ip}:8003/pages/demo.html`)
 
 function _path(file: string) {
   return path.resolve(__dirname, file)
